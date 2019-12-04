@@ -1,4 +1,4 @@
-package com.example.digital_clock
+package com.example.the_clock
 
 import android.os.Bundle
 import io.flutter.app.FlutterActivity

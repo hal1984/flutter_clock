@@ -29,16 +29,16 @@ final _darkTheme = {
 /// A basic digital clock.
 ///
 /// You can do better than this!
-class DigitalClock extends StatefulWidget {
-  const DigitalClock(this.model);
+class TheClock extends StatefulWidget {
+  const TheClock(this.model);
 
   final ClockModel model;
 
   @override
-  _DigitalClockState createState() => _DigitalClockState();
+  _TheClockState createState() => _TheClockState();
 }
 
-class _DigitalClockState extends State<DigitalClock> {
+class _TheClockState extends State<TheClock> {
   DateTime _dateTime = DateTime.now();
   Timer _timer;
 
@@ -51,7 +51,7 @@ class _DigitalClockState extends State<DigitalClock> {
   }
 
   @override
-  void didUpdateWidget(DigitalClock oldWidget) {
+  void didUpdateWidget(TheClock oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.model != oldWidget.model) {
       oldWidget.model.removeListener(_updateModel);
