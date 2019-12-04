@@ -4,9 +4,10 @@
 
 import 'dart:async';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_clock_helper/model.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:the_clock/time_bloc/bloc.dart';
 
 enum _Element {
   background,
@@ -39,29 +40,22 @@ class TheClock extends StatefulWidget {
 }
 
 class _TheClockState extends State<TheClock> {
-  DateTime _dateTime = DateTime.now();
   Timer _timer;
+
+  TimeBloc _timeBloc;
 
   @override
   void initState() {
     super.initState();
     widget.model.addListener(_updateModel);
-    _updateTime();
+    _launchBlocTimer();
     _updateModel();
-  }
-
-  @override
-  void didUpdateWidget(TheClock oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.model != oldWidget.model) {
-      oldWidget.model.removeListener(_updateModel);
-      widget.model.addListener(_updateModel);
-    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _timeBloc?.close();
     widget.model.removeListener(_updateModel);
     widget.model.dispose();
     super.dispose();
@@ -73,35 +67,23 @@ class _TheClockState extends State<TheClock> {
     });
   }
 
-  void _updateTime() {
-    setState(() {
-      _dateTime = DateTime.now();
-      // Update once per minute. If you want to update every second, use the
-      // following code.
-      _timer = Timer(
-        Duration(minutes: 1) -
-            Duration(seconds: _dateTime.second) -
-            Duration(milliseconds: _dateTime.millisecond),
-        _updateTime,
-      );
-      // Update once per second, but make sure to do it at the beginning of each
-      // new second, so that the clock is accurate.
-      // _timer = Timer(
-      //   Duration(seconds: 1) - Duration(milliseconds: _dateTime.millisecond),
-      //   _updateTime,
-      // );
-    });
+  void _launchBlocTimer() {
+    _timeBloc = TimeBloc();
+
+    _timer = Timer.periodic(
+      Duration(seconds: 1),
+      (timer) => _timeBloc.add(UpdateTimeEvent()),
+    );
   }
+
+  String _format2digits(int number) => number.toString().padLeft(2, '0');
+
+  int _formatHour(int hour) => (widget.model.is24HourFormat || hour == 12 ? hour : hour % 12);
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).brightness == Brightness.light
-        ? _lightTheme
-        : _darkTheme;
-    final hour =
-        DateFormat(widget.model.is24HourFormat ? 'HH' : 'hh').format(_dateTime);
-    final minute = DateFormat('mm').format(_dateTime);
-    final fontSize = MediaQuery.of(context).size.width / 3.5;
+    final colors = Theme.of(context).brightness == Brightness.light ? _lightTheme : _darkTheme;
+    final fontSize = MediaQuery.of(context).size.width / 6;
     final offset = -fontSize / 7;
     final defaultStyle = TextStyle(
       color: colors[_Element.text],
@@ -116,16 +98,47 @@ class _TheClockState extends State<TheClock> {
       ],
     );
 
-    return Container(
-      color: colors[_Element.background],
-      child: Center(
-        child: DefaultTextStyle(
-          style: defaultStyle,
-          child: Stack(
-            children: <Widget>[
-              Positioned(left: offset, top: 0, child: Text(hour)),
-              Positioned(right: offset, bottom: offset, child: Text(minute)),
-            ],
+    return BlocProvider(
+      create: (context) => _timeBloc,
+      child: Container(
+        color: colors[_Element.background],
+        child: Center(
+          child: DefaultTextStyle(
+            style: defaultStyle,
+            child: Stack(
+              children: <Widget>[
+                BlocBuilder<TimeBloc, TimeState>(
+                  builder: (context, state) {
+                    return Positioned(
+                      left: offset,
+                      top: 0,
+                      child: Text(_format2digits(_formatHour(state.hour))),
+                    );
+                  },
+                  condition: (prev, curr) => prev.hour != curr.hour,
+                ),
+                BlocBuilder<TimeBloc, TimeState>(
+                  builder: (context, state) {
+                    return Positioned(
+                      left: offset,
+                      bottom: offset,
+                      child: Text(_format2digits(state.minute)),
+                    );
+                  },
+                  condition: (prev, curr) => prev.minute != curr.minute,
+                ),
+                BlocBuilder<TimeBloc, TimeState>(
+                  builder: (context, state) {
+                    return Positioned(
+                      right: offset,
+                      bottom: offset,
+                      child: Text(_format2digits(state.second)),
+                    );
+                  },
+                  condition: (prev, curr) => prev.second != curr.second,
+                ),
+              ],
+            ),
           ),
         ),
       ),
