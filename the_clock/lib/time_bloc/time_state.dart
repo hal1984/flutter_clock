@@ -6,11 +6,12 @@ abstract class TimeState extends Equatable {
   int get hour => _time.hour;
   int get minute => _time.minute;
   int get second => _time.second;
+  int get millisecond => _time.millisecond;
 
   const TimeState(this._time);
 
   @override
-  List<Object> get props => [hour, minute, second];
+  List<Object> get props => [hour, minute, second, millisecond];
 }
 
 class ActualTimeState extends TimeState {

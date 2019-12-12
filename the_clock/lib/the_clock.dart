@@ -71,7 +71,7 @@ class _TheClockState extends State<TheClock> {
     _timeBloc = TimeBloc();
 
     _timer = Timer.periodic(
-      Duration(seconds: 1),
+      Duration(milliseconds: 1),
       (timer) => _timeBloc.add(UpdateTimeEvent()),
     );
   }
@@ -82,7 +82,9 @@ class _TheClockState extends State<TheClock> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).brightness == Brightness.light ? _lightTheme : _darkTheme;
+    final colors = Theme.of(context).brightness == Brightness.light
+        ? _lightTheme
+        : _darkTheme;
     final fontSize = MediaQuery.of(context).size.width / 6;
     final offset = -fontSize / 7;
     final defaultStyle = TextStyle(
@@ -107,35 +109,42 @@ class _TheClockState extends State<TheClock> {
             style: defaultStyle,
             child: Stack(
               children: <Widget>[
-                BlocBuilder<TimeBloc, TimeState>(
-                  builder: (context, state) {
-                    return Positioned(
-                      left: offset,
-                      top: 0,
-                      child: Text(_format2digits(_formatHour(state.hour))),
-                    );
-                  },
-                  condition: (prev, curr) => prev.hour != curr.hour,
+                Positioned(
+                  left: offset,
+                  top: 0,
+                  child: BlocBuilder<TimeBloc, TimeState>(
+                    builder: (context, state) =>
+                        Text(_format2digits(_formatHour(state.hour))),
+                    condition: (prev, curr) => prev.hour != curr.hour,
+                  ),
                 ),
-                BlocBuilder<TimeBloc, TimeState>(
-                  builder: (context, state) {
-                    return Positioned(
-                      left: offset,
-                      bottom: offset,
-                      child: Text(_format2digits(state.minute)),
-                    );
-                  },
-                  condition: (prev, curr) => prev.minute != curr.minute,
+                Positioned(
+                  left: offset,
+                  bottom: offset,
+                  child: BlocBuilder<TimeBloc, TimeState>(
+                    builder: (context, state) =>
+                        Text(_format2digits(state.minute)),
+                    condition: (prev, curr) => prev.minute != curr.minute,
+                  ),
                 ),
-                BlocBuilder<TimeBloc, TimeState>(
-                  builder: (context, state) {
-                    return Positioned(
-                      right: offset,
-                      bottom: offset,
-                      child: Text(_format2digits(state.second)),
-                    );
-                  },
-                  condition: (prev, curr) => prev.second != curr.second,
+                Positioned(
+                  right: offset,
+                  top: offset,
+                  child: BlocBuilder<TimeBloc, TimeState>(
+                    builder: (context, state) =>
+                        Text(_format2digits(state.second)),
+                    condition: (prev, curr) => prev.second != curr.second,
+                  ),
+                ),
+                Positioned(
+                  right: offset,
+                  bottom: offset,
+                  child: BlocBuilder<TimeBloc, TimeState>(
+                    builder: (context, state) =>
+                        Text(state.millisecond.toString()),
+                    condition: (prev, curr) =>
+                        prev.millisecond != curr.millisecond,
+                  ),
                 ),
               ],
             ),
